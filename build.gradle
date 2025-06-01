@@ -1,41 +1,40 @@
-def getGitBranchName() {
-    def branch = 'unknown'
-    try {
-        def stdout = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
-            standardOutput = stdout
-        }
-        branch = stdout.toString().trim()
-    } catch (Exception ignored) {}
-    return branch
+plugins {
+    id 'java'
+    id 'maven-publish'
 }
 
-// Set version from branch name
-version = getGitBranchName()
+group = 'uz.narzullayev.javohir'
+version = '1.1'
+
+repositories {
+    mavenCentral()
+}
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            groupId = 'uz.narzullayev.javohir'
-            artifactId = 'common'
-            version = project.version
         }
     }
-
     repositories {
         maven {
             name = "nexus"
-            def isSnapshot = version.endsWith("-SNAPSHOT")
-            url = uri(isSnapshot
-                    ? "http://localhost:8081/repository/maven-snapshots/"
-                    : "http://localhost:8081/repository/maven-releases/")
+            url = uri("http://localhost:8081/repository/maven-releases/")
             allowInsecureProtocol = true
             credentials {
-                username = findProperty("nexusUsername") ?: "common"
-                password = findProperty("nexusPassword") ?: "admin"
+                username = 'common'
+                password = 'admin'
             }
         }
     }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
