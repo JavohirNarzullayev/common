@@ -1,0 +1,42 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  NEXUS_USER: "common"
+  NEXUS_PASSWORD: "admin"
+
+cache:
+  paths:
+    - .gradle/
+
+before_script:
+  - echo "org.gradle.jvmargs=-Xmx1024m" >> gradle.properties
+
+build:
+  stage: build
+  script:
+    - ./gradlew build
+  only:
+    - develop
+    - merge_requests
+    - main
+    - tags
+
+publish_snapshot:
+  stage: deploy
+  script:
+    - ./gradlew publish
+  only:
+    - develop
+    - merge_requests
+
+publish_release:
+  stage: deploy
+  script:
+    - ./gradlew publish -Prelease
+  when: manual
+  only:
+    - main
+    - tags
